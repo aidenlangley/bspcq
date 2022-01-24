@@ -1,0 +1,239 @@
+#! /usr/bin/env python
+
+from rich.tree import Tree
+from typing import Any
+import argparse
+import json
+import os
+import rich
+import subprocess
+
+
+def setup_cli() -> argparse.ArgumentParser:
+    argparser = argparse.ArgumentParser(
+        description="parses JSON output from 'bspc query' to provide a user \
+            friendly visual representation of bspwm data structure.",
+    )
+    argparser.add_argument(
+        '-m', '--monitor', action='store_true',
+        help="Constrain 'selector' to monitors."
+    )
+    argparser.add_argument(
+        '-d', '--desktop', action='store_true',
+        help="Constrain 'selector' to desktops."
+    )
+    argparser.add_argument(
+        '-n', '--node', action='store_true',
+        help="Constrain 'selector' to nodes."
+    )
+    argparser.add_argument(
+        'selector', nargs='?', default='',
+        help="see 'man bspc' for more information - 'selector' is passed onto \
+            'bspc query', constrained by -m/--monitor, -d/--desktop or -n/--node."
+    )
+    argparser.add_argument(
+        '-j', '--json', type=str, metavar='J',
+        help="provide the data to be analyzed instead of letting 'bspcq' call \
+            'bspc query'."
+    )
+    argparser.add_argument(
+        '-s', '--simple', action='store_true',
+        help="print a simplified tree, with only top level nodes."
+    )
+    argparser.add_argument(
+        '--version', action='version', version='%(prog)s 0.1a'
+    )
+
+    return argparser.parse_args()
+
+
+def get_node_info(bsp_tree: dict[str, Any]) -> dict[str, Any]:
+    bsp_tree['xtitle'] = run_cmd(['xtitle', '{id}'.format(id=bsp_tree['id'])])
+
+    return bsp_tree
+
+
+def traverse_nodes(
+    bsp_tree: dict[str, Any],
+    nodes: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """`bspwm` is simple, but it isn't easy. -zyk
+
+    Probably the most complex piece of the puzzle - we repeatedly
+    `recurse_nodes` here, since in theory we can have an infinite number of
+    `node`s.
+    """
+
+    # Absence of `firstChild` means there is only a single active `node` on the
+    # `desktop`, so we don't have to go fishing for children.
+    if bsp_tree['firstChild'] is None:
+        nodes.append(get_node_info(bsp_tree))
+
+    else:
+        if bsp_tree['firstChild'].get('client'):
+            nodes.append(get_node_info(bsp_tree['firstChild']))
+
+            # In the event that there is a `firstChild`, there will be a
+            # `secondChild`. A `secondChild` can have a `firstChild`, and so on.
+            traverse_nodes(bsp_tree['secondChild'], nodes)
+
+        # A `firstChild` without a `client` is a branch without leaves - no
+        # `node`s but there are more branches...
+        else:
+            traverse_nodes(bsp_tree['firstChild'], nodes)
+
+    return nodes
+
+
+def traverse_tree(iterable: list[Any] | dict[str, Any], tree: Tree) -> Tree:
+    """Recursively iterate over a list or dict and populate a `Tree`."""
+
+    def format_val(val: Any) -> str:
+        if type(val) is str:
+            return f"'[bold]{val}[/bold]'"
+
+        else:
+            return f'[bold]{val}[/bold]'
+
+    if type(iterable) is dict:
+        for key, val in iterable.items():
+
+            if val is None:
+                continue
+
+            elif type(val) is dict or type(val) is list:
+                if val.__len__() > 0:
+                    traverse_tree(
+                        val,
+                        tree.add(f'[bold]{key}[/bold]')
+                    )
+
+            else:
+                tree.add(f'[italic]{key}[/italic] {format_val(val)}')
+
+    elif type(iterable) is list:
+        for el in iterable:
+
+            if el is None:
+                continue
+
+            elif type(el) is dict or type(el) is list:
+                if el.__len__() > 0:
+                    traverse_tree(el, tree)
+
+            else:
+                tree.add(format_val(el))
+
+    return tree
+
+
+def analyze_bsp_tree(
+    bsp_tree: dict[str, Any],
+    domain: str,
+    simple: bool
+) -> Tree:
+    tree = Tree(' '.join([
+        '[bold cyan]M[/bold cyan]:',
+        '[bold]{id}[/bold]'.format(id=bsp_tree['id']),
+        '{name}'.format(name=bsp_tree['name'])
+    ]))
+
+    temp = bsp_tree.copy()
+    temp['desktops'] = None
+    if not simple:
+        tree = traverse_tree(temp, tree)
+
+    if domain == 'monitor':
+        return tree
+
+    desktop: dict[str, Any]
+    for desktop in bsp_tree['desktops']:
+
+        desktop_tree = tree.add(' '.join([
+            '[bold green]D[/bold green]:',
+            '[bold]{id}[/bold]'.format(id=desktop['id']),
+            '{name}'.format(name=desktop['name'])
+        ]))
+
+        temp = desktop.copy()
+        temp['root'] = None
+
+        if not simple:
+            desktop_tree = traverse_tree(temp, desktop_tree)
+
+        if domain == 'desktop':
+            return tree
+
+        # Absence of a `root` means the desktop is not occupied by any `node`s.
+        nodes: dict[str, Any] | None = desktop['root']
+        if nodes is not None:
+            for node in traverse_nodes(nodes, []):
+
+                node_tree = desktop_tree.add(' '.join([
+                    '[bold yellow]N[/bold yellow]:',
+                    '[bold]{id}[/bold]'.format(id=node['id']),
+                    '{name}:'.format(name=node['client']['className']),
+                    '[italic]{xtitle}[/italic]'.format(
+                        xtitle=node['xtitle']
+                    )
+                ]))
+
+                if not simple:
+                    node_tree = traverse_tree(node, node_tree)
+
+    return tree
+
+
+def run_cmd(cmd: list[str]) -> str:
+    return subprocess.run(
+        cmd, capture_output=True
+    ).stdout.decode('utf-8').rstrip()
+
+
+def bspc_query(
+    domain: str,
+    selector: Any,
+    simple: bool
+) -> None:
+    cmd = ['bspc', 'query']
+
+    if domain == 'all':
+        monitors_cmd = cmd.copy()
+        monitors_cmd.extend(['-M'])
+
+        monitors = run_cmd(monitors_cmd).split(os.linesep)
+        for monitor in monitors:
+
+            monitor_cmd = cmd.copy()
+            monitor_cmd.extend(['-T', '-m', f'{monitor}'])
+
+            rich.print(analyze_bsp_tree(
+                json.loads(run_cmd(monitor_cmd)),
+                domain,
+                simple
+            ))
+
+        return
+
+    cmd.extend(['-T', f'--{domain}', selector])
+    tree = analyze_bsp_tree(json.loads(run_cmd(cmd)), domain, simple)
+
+    return rich.print(tree)
+
+
+def main() -> None:
+    args: argparse.ArgumentParser = setup_cli()
+
+    if args.monitor:
+        domain = 'monitor'
+    elif args.desktop:
+        domain = 'desktop'
+    elif args.node:
+        domain = 'node'
+    else:
+        domain = 'all'
+
+    return bspc_query(domain, args.selector, args.simple)
+
+
+main()
