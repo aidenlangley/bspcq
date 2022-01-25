@@ -252,7 +252,7 @@ def bspc_query(
     return bsp_trees
 
 
-def main() -> None:
+def bspcq() -> None:
     args: argparse.ArgumentParser = setup_cli()
 
     if args.json:
@@ -322,6 +322,3 @@ def main() -> None:
             rich.print(full_tree)
 
     return
-
-
-main()

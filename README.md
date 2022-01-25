@@ -20,7 +20,7 @@ intuitive visual.
 ## Installation
 
 ```sh
-python -m pip install bspcq
+python -m pipx install bspcq
 ```
 
 ## Usage

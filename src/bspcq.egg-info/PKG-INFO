@@ -1,12 +1,13 @@
 Metadata-Version: 2.1
 Name: bspcq
-Version: 0.1.2
+Version: 0.1.4
 Summary: A `bspc` analyzer & a utility for bspwm
 Home-page: https://github.com/aidenlangley/bspcq
 Author: Aiden Langley
 Author-email: aiden@nedia.dev
 License: UNKNOWN
 Project-URL: Bug Tracker, https://github.com/aidenlangley/bspcq/issues
+Keywords: bspwm
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
@@ -15,7 +16,7 @@ Classifier: Environment :: X11 Applications
 Classifier: Intended Audience :: End Users/Desktop
 Classifier: Operating System :: POSIX :: Linux
 Classifier: Topic :: Desktop Environment :: Window Managers
-Requires-Python: >=3.10
+Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
@@ -41,7 +42,7 @@ intuitive visual.
 ## Installation
 
 ```sh
-python -m pip install bspcq
+python -m pipx install bspcq
 ```
 
 ## Usage
