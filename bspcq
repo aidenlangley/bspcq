@@ -224,14 +224,34 @@ def bspc_query(
 def main() -> None:
     args: argparse.ArgumentParser = setup_cli()
 
-    if args.monitor:
-        domain = 'monitor'
-    elif args.desktop:
-        domain = 'desktop'
-    elif args.node:
-        domain = 'node'
+    if args.monitor or args.desktop or args.node:
+        if not args.selector:
+            rich.print(' '.join([
+                '[red][bold]selector[/bold]',
+                'required when specifying a',
+                '[bold]domain[/bold][/red]'
+            ]))
+            rich.print(' '.join([
+                'e.g. bspcq',
+                '[-m/d/n]',
+                "['DisplayPort-0'/II/33554476]",
+                '[-s]',
+                "[-j $(bspc -M -m 'DisplayPort-0')]"
+            ]))
+            exit(1)
+
+        if args.monitor:
+            domain = 'monitor'
+        elif args.desktop:
+            domain = 'desktop'
+        else:
+            domain = 'node'
+
     else:
         domain = 'all'
+
+    if args.json:
+        return rich.print(analyze_bsp_tree(args.json, domain, args.simple))
 
     return bspc_query(domain, args.selector, args.simple)
 
