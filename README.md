@@ -17,7 +17,14 @@ bspc query -M -m <monitor-name> | jq
 Except there are fewer parameters, a less complex syntax to remember and an
 intuitive visual.
 
+## Installation
+
+```sh
+python -m pip install bspcq
+```
+
 ## Usage
+
 ```sh
 # Prints the full tree, including output from all monitors.
 bspcq
@@ -41,17 +48,9 @@ bspcq -m/d/n <monitor/desktop/node-identifier>
 
 ## Preview
 
-
 ![2022-01-25_02-17_1](https://user-images.githubusercontent.com/684721/150789813-da7d0b56-1762-4bf7-af6b-7d031f779030.png)
 
 ![2022-01-25_02-17](https://user-images.githubusercontent.com/684721/150789957-06765616-661b-4486-b69a-a7b570e204e1.png)
-
-
-## Installation
-
-```sh
-python -m pip install bspcq
-```
 
 ## Plans
 My goals currently are to:

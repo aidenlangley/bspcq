@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: bspcq
-Version: 0.0.1
+Version: 0.1.0
 Summary: A `bspc` analyzer & a utility for bspwm
 Home-page: https://github.com/aidenlangley/bspcq
 Author: Aiden Langley
@@ -70,11 +70,9 @@ bspcq -m/d/n <monitor/desktop/node-identifier>
 
 ## Installation
 
- - Will have to manually download the script for the moment.
- - Move to `~/.local/bin` or `~/bin` or `/usr/bin`, just make sure it's on
- `$PATH`.
- - `python -m pip install rich`.
- - Good to go.
+```sh
+python -m pip install bspcq
+```
 
 ## Plans
 My goals currently are to:
