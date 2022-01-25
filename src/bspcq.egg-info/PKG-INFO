@@ -1,3 +1,24 @@
+Metadata-Version: 2.1
+Name: bspcq
+Version: 0.0.1
+Summary: A `bspc` analyzer & a utility for bspwm
+Home-page: https://github.com/aidenlangley/bspcq
+Author: Aiden Langley
+Author-email: aiden@nedia.dev
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/aidenlangley/bspcq/issues
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Environment :: Console
+Classifier: Environment :: X11 Applications
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Topic :: Desktop Environment :: Window Managers
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
 # bspcq, q for query
 
 ### A `bspc` analyzer (utility for [bspwm](https://github.com/baskerville/bspwm))
@@ -49,9 +70,11 @@ bspcq -m/d/n <monitor/desktop/node-identifier>
 
 ## Installation
 
-```sh
-python -m pip install bspcq
-```
+ - Will have to manually download the script for the moment.
+ - Move to `~/.local/bin` or `~/bin` or `/usr/bin`, just make sure it's on
+ `$PATH`.
+ - `python -m pip install rich`.
+ - Good to go.
 
 ## Plans
 My goals currently are to:
@@ -64,3 +87,5 @@ My goals currently are to:
 
 This was just an afternoon project that's turning into a week long project since
 it's quite a lot of fun!
+
+
