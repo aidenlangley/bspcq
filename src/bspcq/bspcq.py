@@ -5,7 +5,7 @@ from rich import print
 from rich.tree import Tree
 from subprocess import run as run_sys
 from typing import Any
-# from configparser import ConfigParser
+
 
 def config() -> ArgumentParser:
     argparser = ArgumentParser(
@@ -57,14 +57,6 @@ def config() -> ArgumentParser:
         help="print a simplified view of the BSP tree."
     )
 
-    # Read in the version from `setup.cfg`.
-    # cfg = ConfigParser()
-    # cfg.read('setup.cfg')
-    # argparser.add_argument(
-    #     '--version', action='version',
-    #     version=cfg.get('metadata', 'version')
-    # )
-
     return argparser
 
 
@@ -100,17 +92,23 @@ def run() -> None:
         for tree in bsp_trees:
             print(analyze_monitor(tree, args.simple)[1])
 
+        return
+
     if args.desktops:
         for tree in bsp_trees:
             desktops = analyze_monitor(tree, args.simple)[0]
             for desktop_tree in desktops:
                 print(analyze_desktop(desktop_tree, args.simple)[1])
 
+        return
+
     if args.nodes:
         if args.node:
             for tree in bsp_trees:
                 for node_tree in analyze_nodes(tree, args.simple)[1]:
                     print(node_tree)
+
+            return
 
         elif args.desktop:
             for tree in bsp_trees:
@@ -119,6 +117,8 @@ def run() -> None:
                 if nodes is not None:
                     for node_tree in analyze_nodes(nodes, args.simple)[1]:
                         print(node_tree)
+
+            return
 
         else:
             for tree in bsp_trees:
@@ -130,7 +130,7 @@ def run() -> None:
                         for node_tree in analyze_nodes(nodes, args.simple)[1]:
                             print(node_tree)
 
-        return
+            return
 
     else:
         for bsp_tree in bsp_trees:
@@ -330,3 +330,6 @@ def traverse_tree(iterable: list[Any] | dict[str, Any], tree: Tree) -> Tree:
 
 def make_tree(label: str, bsp_tree: dict[str, Any], simple: bool) -> Tree:
     return Tree(label) if simple else traverse_tree(bsp_tree, Tree(label))
+
+
+run()
