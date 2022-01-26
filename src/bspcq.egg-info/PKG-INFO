@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: bspcq
-Version: 0.1.5
+Version: 0.1.51
 Summary: A `bspc` analyzer & a utility for bspwm
 Home-page: https://github.com/aidenlangley/bspcq
 Author: Aiden Langley
@@ -39,11 +39,18 @@ bspc query -M -m <monitor-name> | jq
 Except there are fewer parameters, a less complex syntax to remember and an
 intuitive visual.
 
-## Installation
+# Installation
 
 ```sh
 python -m pipx install bspcq
-```
+```#
+
+# Upgrade
+
+```sh
+python -m pipx upgrade bspcq
+```#
+
 
 ## Usage
 

@@ -17,11 +17,18 @@ bspc query -M -m <monitor-name> | jq
 Except there are fewer parameters, a less complex syntax to remember and an
 intuitive visual.
 
-## Installation
+# Installation
 
 ```sh
 python -m pipx install bspcq
-```
+```#
+
+# Upgrade
+
+```sh
+python -m pipx upgrade bspcq
+```#
+
 
 ## Usage
 

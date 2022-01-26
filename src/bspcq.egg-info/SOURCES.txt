@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 setup.cfg
 src/bspcq/__init__.py
+src/bspcq/__main__.py
 src/bspcq/bspcq.py
 src/bspcq/tests.py
 src/bspcq.egg-info/PKG-INFO
