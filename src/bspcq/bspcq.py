@@ -3,7 +3,7 @@ from json import loads
 from os import linesep
 from rich import print
 from rich.tree import Tree
-from subprocess import run
+from subprocess import run as run_sys
 from typing import Any
 # from configparser import ConfigParser
 
@@ -167,7 +167,7 @@ def bspc_query(
 
 
 def run_cmd(cmd: list[str]) -> str:
-    return run(cmd, capture_output=True).stdout.decode('utf-8').rstrip()
+    return run_sys(cmd, capture_output=True).stdout.decode('utf-8').rstrip()
 
 
 def analyze_bsp_tree(
