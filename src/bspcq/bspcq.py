@@ -330,6 +330,3 @@ def traverse_tree(iterable: list[Any] | dict[str, Any], tree: Tree) -> Tree:
 
 def make_tree(label: str, bsp_tree: dict[str, Any], simple: bool) -> Tree:
     return Tree(label) if simple else traverse_tree(bsp_tree, Tree(label))
-
-
-run()
