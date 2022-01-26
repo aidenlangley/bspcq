@@ -5,7 +5,7 @@ from rich import print
 from rich.tree import Tree
 from subprocess import run
 from typing import Any
-from configparser import ConfigParser
+# from configparser import ConfigParser
 
 def config() -> ArgumentParser:
     argparser = ArgumentParser(
@@ -58,12 +58,12 @@ def config() -> ArgumentParser:
     )
 
     # Read in the version from `setup.cfg`.
-    cfg = ConfigParser()
-    cfg.read('setup.cfg')
-    argparser.add_argument(
-        '--version', action='version',
-        version=cfg.get('metadata', 'version')
-    )
+    # cfg = ConfigParser()
+    # cfg.read('setup.cfg')
+    # argparser.add_argument(
+    #     '--version', action='version',
+    #     version=cfg.get('metadata', 'version')
+    # )
 
     return argparser
 
