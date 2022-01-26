@@ -1,6 +1,6 @@
 # bspcq, q for query
 
-### A `bspc` analyzer (utility for [bspwm](https://github.com/baskerville/bspwm))
+## A `bspc` analyzer (utility for [bspwm](https://github.com/baskerville/bspwm))
 
 This is a small program that prints a user friendly, visual representation, of
 your current `bsp` tree.
@@ -17,18 +17,17 @@ bspc query -M -m <monitor-name> | jq
 Except there are fewer parameters, a less complex syntax to remember and an
 intuitive visual.
 
-# Installation
+## Installation
 
 ```sh
 python -m pipx install bspcq
-```#
+```
 
-# Upgrade
+## Upgrade
 
 ```sh
 python -m pipx upgrade bspcq
-```#
-
+```
 
 ## Usage
 
@@ -52,14 +51,13 @@ bspcq -M/D/N
 bspcq -m/d/n <monitor/desktop/node-identifier>
 ```
 
-
-## Preview
+### Preview
 
 ![2022-01-25_02-17_1](https://user-images.githubusercontent.com/684721/150789813-da7d0b56-1762-4bf7-af6b-7d031f779030.png)
 
 ![2022-01-25_02-17](https://user-images.githubusercontent.com/684721/150789957-06765616-661b-4486-b69a-a7b570e204e1.png)
 
-## Plans
+### Plans
 My goals currently are to:
  - Align `bspcq` as closely as possible with `bspc query`. I would like for
  `bspcq` to behave almost identically to `bspc query` - it just adds a visual
