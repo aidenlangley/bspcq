@@ -5,7 +5,7 @@ from rich import print
 from rich.tree import Tree
 from subprocess import run
 from typing import Any
-
+from configparser import ConfigParser
 
 def config() -> ArgumentParser:
     argparser = ArgumentParser(
@@ -57,10 +57,18 @@ def config() -> ArgumentParser:
         help="print a simplified view of the BSP tree."
     )
 
+    # Read in the version from `setup.cfg`.
+    cfg = ConfigParser()
+    cfg.read('setup.cfg')
+    argparser.add_argument(
+        '--version', action='version',
+        version=cfg.get('metadata', 'version')
+    )
+
     return argparser
 
 
-def bspcq() -> None:
+def main() -> None:
     args: ArgumentParser = config().parse_args()
 
     if args.json:
@@ -225,7 +233,7 @@ def analyze_nodes(
         label = ' '.join([
             '[bold yellow]N[/bold yellow]:',
             '[bold]{id}[/bold]'.format(id=node['id']),
-            '{name}:'.format(name=node['client']['className']),
+            '{name}'.format(name=node['client']['className']),
             '[italic]{xtitle}[/italic]'.format(
                 xtitle=node['xtitle']
             )
@@ -251,9 +259,10 @@ def traverse_nodes(
     # Absence of `firstChild` means there is only a single active `node` on the
     # `desktop`, so we don't have to go fishing for children.
     if bsp_tree['firstChild'] is None:
+
         bsp_tree['xtitle'] = run_cmd([
             'xtitle',
-            f'{id}'.format(id=bsp_tree['id'])
+            '{id}'.format(id=bsp_tree['id'])
         ])
         nodes.append(bsp_tree)
 
@@ -261,7 +270,7 @@ def traverse_nodes(
         if bsp_tree['firstChild'].get('client'):
             bsp_tree['firstChild']['xtitle'] = run_cmd([
                 'xtitle',
-                f'{id}'.format(id=bsp_tree['id'])
+                '{id}'.format(id=bsp_tree['firstChild']['id'])
             ])
             nodes.append(bsp_tree['firstChild'])
 
@@ -321,3 +330,6 @@ def traverse_tree(iterable: list[Any] | dict[str, Any], tree: Tree) -> Tree:
 
 def make_tree(label: str, bsp_tree: dict[str, Any], simple: bool) -> Tree:
     return Tree(label) if simple else traverse_tree(bsp_tree, Tree(label))
+
+
+main()
