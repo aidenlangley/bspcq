@@ -44,10 +44,14 @@ bspcq -s
 ```sh
 # Grabs info on all nodes that belong to the specified domain.
 bspcq -M/D/N
+
+# For a simplified view.
+bspcq -M/D/N -s
 ```
 
 ```sh
-# Passes through a query to `bspc query` and prints our tree.
+# Passes through a query to `bspc query` and prints our tree, valid identifiers
+# are names, ID's or the address output by `bspc -M/D/N`.
 bspcq -m/d/n <monitor/desktop/node-identifier>
 ```
 
