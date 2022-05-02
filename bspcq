@@ -85,7 +85,6 @@ def run() -> None:
         bsp_trees = bspc_query(query[0], query[1])
 
     else:
-        print('all')
         bsp_trees = bspc_query('all')
 
     # These args provide behaviour constraints - the user may define the domain
