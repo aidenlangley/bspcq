@@ -10,6 +10,7 @@ into tiling window managers, and have some toys to play with.
 
 It's essentially the same as
 running:
+
 ```sh
 bspc query -M -m <monitor-name> | jq
 ```
@@ -18,6 +19,57 @@ Except there are fewer parameters, a less complex syntax to remember and an
 intuitive visual.
 
 ## Installation
+
+I'd recommend just copying the script from the root of this directory, `bspcq`,
+and changing the shebang.
+
+```sh
+git clone https://github.com/aidenlangley/bspcq
+mv bspcq/bspcq ~/bin/bspcq # or ~/.local/bin/bspcq
+chmod +x ~/bin/bspcq
+```
+
+Then edit the shebang - my shebang:
+
+```sh
+#! /usr/bin/env python3.10
+```
+
+Your shebang might need to be be:
+
+```sh
+#! /usr/bin/env python3
+```
+
+### Dependencies
+
+In addition, some Python modules are required, as is `xtitle`.
+
+#### [`rich`](https://pypi.org/project/rich/)
+
+`rich` is responsible for the nicely formatted tree.
+
+```
+python -m pip install rich
+```
+
+#### [`xtitle`](https://github.com/baskerville/xtitle)
+
+`xtitle` assists in getting the title name of a node/window in X.
+
+Requires C/C++ development tools, varies by distro.
+
+```
+git clone https://github.com/baskerville/xtitle
+cd xtitle
+make && make install
+```
+
+I've actually included it here, under contrib, so you can just copy it to `~/bin`.
+
+### Via `pipx`
+
+https://pypi.org/project/bspcq/
 
 ```sh
 python -m pipx install bspcq
@@ -62,13 +114,15 @@ bspcq -m/d/n <monitor/desktop/node-identifier>
 ![2022-01-25_02-17](https://user-images.githubusercontent.com/684721/150789957-06765616-661b-4486-b69a-a7b570e204e1.png)
 
 ### Plans
+
 My goals currently are to:
- - Align `bspcq` as closely as possible with `bspc query`. I would like for
- `bspcq` to behave almost identically to `bspc query` - it just adds a visual
- element.
- - Remain as lean as possible. A nice-to-have feature would be 0 reliance on
- external libraries, so I'd like to remove `rich` and implement a way to display
- the `tree` myself.
+
+- Align `bspcq` as closely as possible with `bspc query`. I would like for
+  `bspcq` to behave almost identically to `bspc query` - it just adds a visual
+  element.
+- Remain as lean as possible. A nice-to-have feature would be 0 reliance on
+  external libraries, so I'd like to remove `rich` and implement a way to display
+  the `tree` myself.
 
 This was just an afternoon project that's turning into a week long project since
 it's quite a lot of fun!
