@@ -178,18 +178,33 @@ def analyze_bsp_tree(
 ) -> Tree:
     tree = analyze_monitor(bsp_tree, simple)[1]
 
-    desktop: dict[str, Any]
-    for desktop in bsp_tree['desktops']:
-        desktop_tree = tree.add(analyze_desktop(desktop, simple)[1])
+    # If `desktops` exists, we loop through each.
+    if bsp_tree.get('desktops'):
+
+        desktop: Dict[str, Any]
+        for desktop in bsp_tree['desktops']:
+            desktop_tree = tree.add(analyze_desktop(desktop, simple)[1])
+
+            # Absence of a `root` means the desktop is not occupied by any `node`s.
+            nodes: dict[str, Any] | None = desktop['root']
+            if nodes is not None:
+
+                for node_tree in analyze_nodes(nodes, simple)[1]:
+                    desktop_tree.add(node_tree)
+
+    # Otherwise, we're only dealing with a single desktop.
+    else:
+        desktop_tree = tree.add(analyze_desktop(bsp_tree, simple)[1])
 
         # Absence of a `root` means the desktop is not occupied by any `node`s.
-        nodes: dict[str, Any] | None = desktop['root']
+        nodes: dict[str, Any] | None = bsp_tree['root']
         if nodes is not None:
 
             for node_tree in analyze_nodes(nodes, simple)[1]:
                 desktop_tree.add(node_tree)
 
     return tree
+
 
 
 def analyze_monitor(
@@ -205,7 +220,10 @@ def analyze_monitor(
     temp = bsp_tree.copy()
     temp['desktops'] = None
 
-    return (bsp_tree['desktops'], make_tree(label, temp, simple))
+    return (
+        bsp_tree['desktops'] if bsp_tree.get('desktops') else bsp_tree,
+        make_tree(label, temp, simple)
+    )
 
 
 def analyze_desktop(
