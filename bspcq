@@ -71,7 +71,7 @@ def run() -> None:
     # Determine how to run `bspc query` - the user will be able to pass multiple
     # optional arguments (`-n 123 -d 456`) but we will perform a `node` query in
     # as there is an order of preference.
-    query: tuple[str, list[Any]]
+    query: Tuple[str, List[Any]]
     if args.monitor or args.desktop or args.node:
         if args.node:
             query = ('node', args.node)
@@ -148,7 +148,7 @@ def bspc_query(
 ) -> List[str]:
     cmd = ['bspc', 'query']
 
-    bsp_trees: list[str] = []
+    bsp_trees: List[str] = []
     if domain == 'all':
         monitors_cmd = cmd.copy()
         monitors_cmd.extend(['-M'])
@@ -168,6 +168,7 @@ def bspc_query(
                 bsp_trees.append(loads(run_cmd(cmd)))
             except:
                 print('`' + ' '.join(cmd) + '` returned no results.')
+
 
     return bsp_trees
 
@@ -209,7 +210,6 @@ def analyze_bsp_tree(
     return tree
 
 
-
 def analyze_monitor(
     bsp_tree: Dict[str, Any],
     simple: bool
@@ -249,14 +249,19 @@ def analyze_nodes(
     bsp_tree: Dict[str, Any],
     simple: bool
 ) -> Tuple[List[Dict[str, Any]], List[Tree]]:
-    bsp_trees: list[Dict[str, Any]] = []
-    tree_list: list[Tree] = []
+    bsp_trees: List[Dict[str, Any]] = []
+    tree_list: List[Tree] = []
 
     for node in traverse_nodes(bsp_tree, []):
+        # If a client exists, we've got an occupied node - if we don't, we've
+        # got a receptable.
+        client = node.get('client')
+        name = client['className'] if client else 'receptacle'
+
         label = ' '.join([
             '[bold yellow]N[/bold yellow]:',
             '[bold]{id}[/bold]'.format(id=node['id']),
-            '{name}'.format(name=node['client']['className']),
+            '{name}'.format(name=name),
             '[italic]{xtitle}[/italic]'.format(
                 xtitle=node['xtitle']
             )
@@ -270,8 +275,8 @@ def analyze_nodes(
 
 def traverse_nodes(
     bsp_tree: Dict[str, Any],
-    nodes: list[Dict[str, Any]]
-) -> list[Dict[str, Any]]:
+    nodes: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
     """`bspwm` is simple, but it isn't easy. -zyk
 
     Probably the most complex piece of the puzzle - we repeatedly
@@ -313,11 +318,7 @@ def traverse_tree(iterable: List[Any] | Dict[str, Any], tree: Tree) -> Tree:
     """Recursively iterate over a List or Dict and populate a `Tree`."""
 
     def format_val(val: Any) -> str:
-        if type(val) is str:
-            return f"'[bold]{val}[/bold]'"
-
-        else:
-            return f'[bold]{val}[/bold]'
+        return f"'[bold]{val}[/bold]'"
 
     if type(iterable) is dict:
         for key, val in iterable.items():
