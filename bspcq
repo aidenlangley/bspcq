@@ -163,7 +163,7 @@ def bspc_query(
     else:
         for identifier in identifiers:
             cmd.extend(['-T', f'--{domain}', identifier])
-            bsp_trees.append(run_cmd(cmd))
+            bsp_trees.append(loads(run_cmd(cmd)))
 
     return bsp_trees
 
