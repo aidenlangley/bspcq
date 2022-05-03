@@ -4,7 +4,7 @@ from os import linesep
 from rich import print
 from rich.tree import Tree
 from subprocess import run as run_sys
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 
 def config() -> ArgumentParser:
@@ -69,7 +69,7 @@ def run() -> None:
     # Determine how to run `bspc query` - the user will be able to pass multiple
     # optional arguments (`-n 123 -d 456`) but we will perform a `node` query in
     # as there is an order of preference.
-    query: tuple[str, list[Any]]
+    query: Tuple[str, List[Any]]
     if args.monitor or args.desktop or args.node:
         if args.node:
             query = ('node', args.node)
@@ -142,11 +142,11 @@ def run() -> None:
 
 def bspc_query(
     domain: str,
-    identifiers: list[Any] = []
-) -> list[str]:
+    identifiers: List[Any] = []
+) -> List[str]:
     cmd = ['bspc', 'query']
 
-    bsp_trees: list[str] = []
+    bsp_trees: List[str] = []
     if domain == 'all':
         monitors_cmd = cmd.copy()
         monitors_cmd.extend(['-M'])
@@ -161,39 +161,57 @@ def bspc_query(
     else:
         for identifier in identifiers:
             cmd.extend(['-T', f'--{domain}', identifier])
-            bsp_trees.append(run_cmd(cmd))
+
+            try:
+                bsp_trees.append(loads(run_cmd(cmd)))
+            except:
+                print('`' + ' '.join(cmd) + '` returned no results.')
+
 
     return bsp_trees
 
 
-def run_cmd(cmd: list[str]) -> str:
+def run_cmd(cmd: List[str]) -> str:
     return run_sys(cmd, capture_output=True).stdout.decode('utf-8').rstrip()
 
 
 def analyze_bsp_tree(
-    bsp_tree: dict[str, Any],
+    bsp_tree: Dict[str, Any],
     simple: bool
 ) -> Tree:
-    tree = analyze_monitor(bsp_tree, simple)[1]
+    # If `desktops` exists, we loop through each.
+    if bsp_tree.get('desktops'):
+        tree = analyze_monitor(bsp_tree, simple)[1]
 
-    desktop: dict[str, Any]
-    for desktop in bsp_tree['desktops']:
-        desktop_tree = tree.add(analyze_desktop(desktop, simple)[1])
+        desktop: Dict[str, Any]
+        for desktop in bsp_tree['desktops']:
+            desktop_tree = tree.add(analyze_desktop(desktop, simple)[1])
+
+            # Absence of a `root` means the desktop is not occupied by any `node`s.
+            nodes: dict[str, Any] | None = desktop['root']
+            if nodes is not None:
+
+                for node_tree in analyze_nodes(nodes, simple)[1]:
+                    desktop_tree.add(node_tree)
+
+    # Otherwise, we're only dealing with a single desktop.
+    else:
+        tree = Tree(bsp_tree['name']).add(analyze_desktop(bsp_tree, simple)[1])
 
         # Absence of a `root` means the desktop is not occupied by any `node`s.
-        nodes: dict[str, Any] | None = desktop['root']
+        nodes: dict[str, Any] | None = bsp_tree['root']
         if nodes is not None:
 
             for node_tree in analyze_nodes(nodes, simple)[1]:
-                desktop_tree.add(node_tree)
+                tree.add(node_tree)
 
     return tree
 
 
 def analyze_monitor(
-    bsp_tree: dict[str, Any],
+    bsp_tree: Dict[str, Any],
     simple: bool
-) -> tuple[dict[str, Any], Tree]:
+) -> Tuple[Dict[str, Any], Tree]:
     label = ' '.join([
         '[bold cyan]M[/bold cyan]:',
         '[bold]{id}[/bold]'.format(id=bsp_tree['id']),
@@ -203,13 +221,16 @@ def analyze_monitor(
     temp = bsp_tree.copy()
     temp['desktops'] = None
 
-    return (bsp_tree['desktops'], make_tree(label, temp, simple))
+    return (
+        bsp_tree['desktops'] if bsp_tree.get('desktops') else bsp_tree,
+        make_tree(label, temp, simple)
+    )
 
 
 def analyze_desktop(
-    bsp_tree: dict[str, Any],
+    bsp_tree: Dict[str, Any],
     simple: bool
-) -> tuple[dict[str, Any], Tree]:
+) -> Tuple[Dict[str, Any], Tree]:
     label = ' '.join([
         '[bold green]D[/bold green]:',
         '[bold]{id}[/bold]'.format(id=bsp_tree['id']),
@@ -223,17 +244,22 @@ def analyze_desktop(
 
 
 def analyze_nodes(
-    bsp_tree: dict[str, Any],
+    bsp_tree: Dict[str, Any],
     simple: bool
-) -> tuple[list[dict[str, Any]], list[Tree]]:
-    bsp_trees: list[dict[str, Any]] = []
-    tree_list: list[Tree] = []
+) -> Tuple[List[Dict[str, Any]], List[Tree]]:
+    bsp_trees: List[Dict[str, Any]] = []
+    tree_list: List[Tree] = []
 
     for node in traverse_nodes(bsp_tree, []):
+        # If a client exists, we've got an occupied node - if we don't, we've
+        # got a receptable.
+        client = node.get('client')
+        name = client['className'] if client else 'receptacle'
+
         label = ' '.join([
             '[bold yellow]N[/bold yellow]:',
             '[bold]{id}[/bold]'.format(id=node['id']),
-            '{name}'.format(name=node['client']['className']),
+            '{name}'.format(name=name),
             '[italic]{xtitle}[/italic]'.format(
                 xtitle=node['xtitle']
             )
@@ -246,9 +272,9 @@ def analyze_nodes(
 
 
 def traverse_nodes(
-    bsp_tree: dict[str, Any],
-    nodes: list[dict[str, Any]]
-) -> list[dict[str, Any]]:
+    bsp_tree: Dict[str, Any],
+    nodes: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
     """`bspwm` is simple, but it isn't easy. -zyk
 
     Probably the most complex piece of the puzzle - we repeatedly
@@ -286,15 +312,11 @@ def traverse_nodes(
     return nodes
 
 
-def traverse_tree(iterable: list[Any] | dict[str, Any], tree: Tree) -> Tree:
-    """Recursively iterate over a list or dict and populate a `Tree`."""
+def traverse_tree(iterable: List[Any] | Dict[str, Any], tree: Tree) -> Tree:
+    """Recursively iterate over a List or Dict and populate a `Tree`."""
 
     def format_val(val: Any) -> str:
-        if type(val) is str:
-            return f"'[bold]{val}[/bold]'"
-
-        else:
-            return f'[bold]{val}[/bold]'
+        return f"'[bold]{val}[/bold]'"
 
     if type(iterable) is dict:
         for key, val in iterable.items():
@@ -328,5 +350,5 @@ def traverse_tree(iterable: list[Any] | dict[str, Any], tree: Tree) -> Tree:
     return tree
 
 
-def make_tree(label: str, bsp_tree: dict[str, Any], simple: bool) -> Tree:
+def make_tree(label: str, bsp_tree: Dict[str, Any], simple: bool) -> Tree:
     return Tree(label) if simple else traverse_tree(bsp_tree, Tree(label))
