@@ -1,6 +1,6 @@
 #! /usr/bin/env python3.10
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from json import loads
 from os import linesep
 from subprocess import run as run_sys
@@ -89,13 +89,13 @@ def config() -> ArgumentParser:
 
 
 def run() -> None:
-    args: ArgumentParser = config().parse_args()
+    args: Namespace = config().parse_args()
 
     # When passed json, we'll just analyze it and give it back.
     if args.json:
         return print(analyze_bsp_tree(args.json, args.simple))
 
-    bsp_trees: List[str] = query(args)
+    bsp_trees: List[Dict[str, Any]] = query(args)
 
     # These args provide behaviour constraints - the user may define the domain
     # that they are interested in, which means only information pertaining to
@@ -116,7 +116,7 @@ def run() -> None:
     return
 
 
-def query(args: ArgumentParser) -> List[str]:
+def query(args: Namespace) -> List[Dict[str, Any]]:
     # Determine how to run `bspc query` - the user will be able to pass
     # multiple optional arguments (`-n 123 -d 456`) but we will perform a
     # `node` query in as there is an order of preference.
@@ -137,12 +137,12 @@ def query(args: ArgumentParser) -> List[str]:
         return bspc_query("all")
 
 
-def print_monitors(bsp_trees: List[str], simple: bool) -> None:
+def print_monitors(bsp_trees: List[Dict[str, Any]], simple: bool) -> None:
     for tree in bsp_trees:
         print(analyze_monitor(tree, simple)[1])
 
 
-def print_desktops(bsp_trees: List[str], simple: bool) -> None:
+def print_desktops(bsp_trees: List[Dict[str, Any]], simple: bool) -> None:
     for tree in bsp_trees:
         desktops = analyze_monitor(tree, simple)[0]
         for desktop_tree in desktops:
@@ -150,13 +150,16 @@ def print_desktops(bsp_trees: List[str], simple: bool) -> None:
 
 
 def print_nodes(
-    bsp_trees: List[str], only_nodes: bool, with_desktops: bool, simple: bool
+    bsp_trees: List[Dict[str, Any]],
+    only_nodes: bool,
+    with_desktops: bool,
+    simple: bool,
 ) -> None:
-    def analyze_and_print_nodes(tree: str, simple: bool):
+    def analyze_and_print_nodes(tree: Dict[str, Any], simple: bool):
         for node_tree in analyze_nodes(tree, simple)[1]:
             print(node_tree)
 
-    def analyze_and_print_desktops(tree: str, simple: bool):
+    def analyze_and_print_desktops(tree: Dict[str, Any], simple: bool):
         nodes = analyze_desktop(tree, simple)[0]
         if nodes is not None:
             analyze_and_print_nodes(nodes, simple)
@@ -174,10 +177,12 @@ def print_nodes(
                 analyze_and_print_desktops(desktop_tree, simple)
 
 
-def bspc_query(domain: str, identifiers: List[Any] = None) -> List[str]:
+def bspc_query(
+    domain: str, identifiers: List[Any] = []
+) -> List[Dict[str, Any]]:
     cmd = ["bspc", "query"]
 
-    bsp_trees: List[str] = []
+    bsp_trees: List[Dict[str, Any]] = []
     if domain == "all":
         monitors_cmd = cmd.copy()
         monitors_cmd.extend(["-M"])
@@ -238,7 +243,7 @@ def analyze_bsp_tree(bsp_tree: Dict[str, Any], simple: bool) -> Tree:
 
 def analyze_monitor(
     bsp_tree: Dict[str, Any], simple: bool
-) -> Tuple[Dict[str, Any], Tree]:
+) -> Tuple[List[Dict[str, Any]], Tree]:
     label = " ".join(
         [
             "[bold cyan]M[/bold cyan]:",
